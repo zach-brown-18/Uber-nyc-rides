@@ -7,23 +7,34 @@ import pandas as pd
 import plotly.express as px
 import numpy as np
 
+# # Load data on rides
+# # April-September 2014
+# df_april = pd.read_csv('https://raw.githubusercontent.com/fivethirtyeight/uber-tlc-foil-response/master/uber-trip-data/uber-raw-data-apr14.csv')
+# df_may = pd.read_csv('https://raw.githubusercontent.com/fivethirtyeight/uber-tlc-foil-response/master/uber-trip-data/uber-raw-data-may14.csv')
+# df_june = pd.read_csv('https://raw.githubusercontent.com/fivethirtyeight/uber-tlc-foil-response/master/uber-trip-data/uber-raw-data-jun14.csv')
+# df_july = pd.read_csv('https://raw.githubusercontent.com/fivethirtyeight/uber-tlc-foil-response/master/uber-trip-data/uber-raw-data-jul14.csv')
+# df_august = pd.read_csv('https://raw.githubusercontent.com/fivethirtyeight/uber-tlc-foil-response/master/uber-trip-data/uber-raw-data-aug14.csv')
+# df_september = pd.read_csv('https://raw.githubusercontent.com/fivethirtyeight/uber-tlc-foil-response/master/uber-trip-data/uber-raw-data-sep14.csv')
+
+# # Add 'Hour' bin
+# def toHour(dateTimeStr:str)->str:
+#     return int(dateTimeStr.split(" ")[1].split(":")[0]) + 1
+
+# frames = [df_april, df_may, df_june, df_july, df_august, df_september]
+
+# for month in frames:  
+#     month["Hour"] = month["Date/Time"].apply(toHour)
+
 # Load data on rides
 # April-September 2014
-df_april = pd.read_csv('https://raw.githubusercontent.com/fivethirtyeight/uber-tlc-foil-response/master/uber-trip-data/uber-raw-data-apr14.csv')
-df_may = pd.read_csv('https://raw.githubusercontent.com/fivethirtyeight/uber-tlc-foil-response/master/uber-trip-data/uber-raw-data-may14.csv')
-df_june = pd.read_csv('https://raw.githubusercontent.com/fivethirtyeight/uber-tlc-foil-response/master/uber-trip-data/uber-raw-data-jun14.csv')
-df_july = pd.read_csv('https://raw.githubusercontent.com/fivethirtyeight/uber-tlc-foil-response/master/uber-trip-data/uber-raw-data-jul14.csv')
-df_august = pd.read_csv('https://raw.githubusercontent.com/fivethirtyeight/uber-tlc-foil-response/master/uber-trip-data/uber-raw-data-aug14.csv')
-df_september = pd.read_csv('https://raw.githubusercontent.com/fivethirtyeight/uber-tlc-foil-response/master/uber-trip-data/uber-raw-data-sep14.csv')
-
-# Add 'Hour' bin
-def toHour(dateTimeStr:str)->str:
-    return int(dateTimeStr.split(" ")[1].split(":")[0]) + 1
+df_april = pd.read_csv('df_april.csv')
+df_may = pd.read_csv('df_may.csv')
+df_june = pd.read_csv('df_june.csv')
+df_july = pd.read_csv('df_july.csv')
+df_august = pd.read_csv('df_august.csv')
+df_september = pd.read_csv('df_september.csv')
 
 frames = [df_april, df_may, df_june, df_july, df_august, df_september]
-
-for month in frames:  
-    month["Hour"] = month["Date/Time"].apply(toHour)
 
 # Filtering functions
 # Takes (string date in form ##/##/####, dataframe to be selected from)
