@@ -7,23 +7,6 @@ import pandas as pd
 import plotly.express as px
 import numpy as np
 
-# # Load data on rides
-# # April-September 2014
-# df_april = pd.read_csv('https://raw.githubusercontent.com/fivethirtyeight/uber-tlc-foil-response/master/uber-trip-data/uber-raw-data-apr14.csv')
-# df_may = pd.read_csv('https://raw.githubusercontent.com/fivethirtyeight/uber-tlc-foil-response/master/uber-trip-data/uber-raw-data-may14.csv')
-# df_june = pd.read_csv('https://raw.githubusercontent.com/fivethirtyeight/uber-tlc-foil-response/master/uber-trip-data/uber-raw-data-jun14.csv')
-# df_july = pd.read_csv('https://raw.githubusercontent.com/fivethirtyeight/uber-tlc-foil-response/master/uber-trip-data/uber-raw-data-jul14.csv')
-# df_august = pd.read_csv('https://raw.githubusercontent.com/fivethirtyeight/uber-tlc-foil-response/master/uber-trip-data/uber-raw-data-aug14.csv')
-# df_september = pd.read_csv('https://raw.githubusercontent.com/fivethirtyeight/uber-tlc-foil-response/master/uber-trip-data/uber-raw-data-sep14.csv')
-
-# # Add 'Hour' bin
-# def toHour(dateTimeStr:str)->str:
-#     return int(dateTimeStr.split(" ")[1].split(":")[0]) + 1
-
-# frames = [df_april, df_may, df_june, df_july, df_august, df_september]
-
-# for month in frames:  
-#     month["Hour"] = month["Date/Time"].apply(toHour)
 
 # Load data on rides
 # April-September 2014
@@ -82,6 +65,8 @@ app.layout = html.Div(id='all', children=[
                 html.Label('Date'),
                 dcc.DatePickerSingle(
                     id='date_input',
+                    min_date_allowed=dt(2014, 4, 1),
+                    max_date_allowed=dt(2014, 9, 30),
                     date=dt(2014, 4, 15)
                 ),
 
