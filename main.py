@@ -8,31 +8,45 @@ import plotly.express as px
 import numpy as np
 
 
-# Load data on rides
 # April-September 2014
-df_april = pd.read_csv('df_april.csv')
-df_may = pd.read_csv('df_may.csv')
-df_june = pd.read_csv('df_june.csv')
-df_july = pd.read_csv('df_july.csv')
-df_august = pd.read_csv('df_august.csv')
-df_september = pd.read_csv('df_september.csv')
+df_april = pd.read_csv('df_april.csv', index_col=0)
+df_may = pd.read_csv('df_may.csv', index_col=0)
+df_june = pd.read_csv('df_june.csv', index_col=0)
+df_july = pd.read_csv('df_july.csv', index_col=0)
+df_august = pd.read_csv('df_august.csv', index_col=0)
+df_september = pd.read_csv('df_september.csv', index_col=0)
 
 frames = [df_april, df_may, df_june, df_july, df_august, df_september]
 
 # Filtering functions
-# Takes (string date in form ##/##/####, dataframe to be selected from)
+# Takes string date in form #/##/####
 def ridesOnDay(DATE, DF_MONTH):
     return DF_MONTH[DF_MONTH['Date/Time'].str.match(DATE)]
 
 # Works for current state. Would be updated if the program receives more data
-# Takes (string or int month, string year)
 def findDF(MONTH, YEAR):
     return frames[int(MONTH)-4] if YEAR == "2014" else None
 
-# Takes (dataframe of rides, integer hour filter)
 def hour(DF, HOUR):
     return DF[DF["Hour"] == int(HOUR)]
 
+def splitYearMonthDay(date):
+    date = date.replace('T', ' ')
+    date = date.split(' ')[0].split('-')
+    return date
+
+def extractMonth(date):
+    date = splitYearMonthDay(date)
+    return date[1]
+
+def extractYear(date):
+    date = splitYearMonthDay(date)
+    return date[0]
+
+def formatDateString(date):
+    date = splitYearMonthDay(date)
+    date_string = date[1].lstrip('0') + '/' + date[2].lstrip('0') + '/' + date[0]
+    return date_string
 
 # GUI
 
@@ -46,6 +60,8 @@ colors = {
     'background2': '#008080',
     'text': '#7FDBFF'
 }
+
+hour_selection = [{'label':f'{n}', 'value':n} for n in range(1,25)]
 
 app.layout = html.Div(id='all', children=[
     html.Div(
@@ -72,32 +88,7 @@ app.layout = html.Div(id='all', children=[
 
                 html.Label('Hour'),
                 dcc.Dropdown(id='hour_input',
-                    options=[
-                        {'label':'1', 'value':1},
-                        {'label':'2', 'value':2},
-                        {'label':'3', 'value':3},
-                        {'label':'4', 'value':4},
-                        {'label':'5', 'value':5},
-                        {'label':'6', 'value':6},
-                        {'label':'7', 'value':7},
-                        {'label':'8', 'value':8},
-                        {'label':'9', 'value':9},
-                        {'label':'10', 'value':10},
-                        {'label':'11', 'value':11},
-                        {'label':'12', 'value':12},
-                        {'label':'13', 'value':13},
-                        {'label':'14', 'value':14},
-                        {'label':'15', 'value':15},
-                        {'label':'16', 'value':16},
-                        {'label':'17', 'value':17},
-                        {'label':'18', 'value':18},
-                        {'label':'19', 'value':19},
-                        {'label':'20', 'value':20},
-                        {'label':'21', 'value':21},
-                        {'label':'22', 'value':22},
-                        {'label':'23', 'value':23},
-                        {'label':'24', 'value':24}
-                    ],
+                    options=hour_selection,
                     multi=True,
                 ),
 
@@ -106,9 +97,7 @@ app.layout = html.Div(id='all', children=[
                 ])
             
             ],
-            style={
-                'fontFamily': 'Helvetica Neue'
-            },
+            style={'fontFamily': 'Helvetica Neue'},
             className = 'four columns'
         ),
 
@@ -120,9 +109,7 @@ app.layout = html.Div(id='all', children=[
                     id='scatter',
                     )
                 ],
-                style={
-                    'height': '50vh'
-                }
+                style={'height': '50vh'}
             ),
 
             html.Div(
@@ -132,9 +119,7 @@ app.layout = html.Div(id='all', children=[
                     id='histogram',
                     )
                 ],
-                style={
-                    'height': '50vh'
-                }
+                style={'height': '50vh'}
             )],
         className = 'eight columns'
         )],
@@ -166,15 +151,10 @@ app.layout = html.Div(id='all', children=[
 )
 def update_histogram(date):
     if date is not None:
-        # Extract date in format #/##/#### from date selector
-        date = date.replace('T', ' ')
-        date = date.split(' ')[0].split('-')
-
-        date_string = date[1].lstrip('0') + '/' + date[2].lstrip('0') + '/' + date[0]
-        df = findDF(date[1].lstrip('0'), date[0])
+        df = findDF(extractMonth(date), extractYear(date))
+        date_string = formatDateString(date)
         result = ridesOnDay(date_string, df)
         
-        # Build histogram
         counts, bins = np.histogram(result["Hour"], bins=range(1, 26))
         bins = range(1, 25)
 
@@ -186,7 +166,6 @@ def update_histogram(date):
             color_discrete_sequence=colors,
         )
 
-        # Formatting
         fig_hist.update_traces(
             textposition='outside',
             hovertemplate='Hour: %{x}<br>' + 'Rides: %{y}'
@@ -225,15 +204,10 @@ def update_scatter(HOUR, DATE):
     mapbox_token="pk.eyJ1IjoiemFjaDE4MTgxOCIsImEiOiJjazhrZjBkZHQwMTdxM2Zwem5obHBneDdtIn0.gG_MrTFb9TiejDTHKAdL2A"
     px.set_mapbox_access_token(mapbox_token)
     
-    # Extract date in format #/##/#### from date selector
-    DATE = DATE.replace('T', ' ')
-    DATE = DATE.split(' ')[0].split('-')
-
-    date_string = DATE[1].lstrip('0') + '/' + DATE[2].lstrip('0') + '/' + DATE[0]
-    df = findDF(DATE[1].lstrip('0'), DATE[0])
+    df = findDF(extractMonth(DATE), extractYear(DATE))
+    date_string = formatDateString(DATE)
     result = ridesOnDay(date_string, df)
     
-    # Handle hour selection
     if HOUR is not None:
         if HOUR:
             for selection in range(len(HOUR)):
@@ -244,7 +218,6 @@ def update_scatter(HOUR, DATE):
             
             result = temp_result
 
-    # Plot scatter
     fig_scat = px.scatter_mapbox(
         result,
         lat="Lat",
@@ -266,7 +239,6 @@ def update_scatter(HOUR, DATE):
         margin={'l':0, 'r':0, 'b':0, 't':0}
     )
     
-    # update_counts section
     counts = len(result.index)
     str_output = str(counts) + " rides"
     
