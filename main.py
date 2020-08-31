@@ -11,7 +11,7 @@ from helper_functions import setHistLayout, setScatLayout, updateHour, setRidesC
 
 # April-September 2014
 months = ['april', 'may', 'june', 'july', 'august', 'september']
-frames = [pd.read_csv(f'df_{month}.csv', index_col=0) for month in months]
+frames = [pd.read_csv(f'csv/df_{month}.csv', index_col=0) for month in months]
 
 # GUI
 
@@ -163,7 +163,7 @@ def update_scatter(HOUR, DATE):
         color="Hour",
     )
     setScatLayout(fig_scat)
-    
+
     str_output = setRidesCount(result)
     
     return fig_scat, str_output
