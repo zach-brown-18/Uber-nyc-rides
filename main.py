@@ -6,47 +6,12 @@ from dash.dependencies import Input, Output
 import pandas as pd
 import plotly.express as px
 import numpy as np
-
+from helper_functions import ridesOnDay, findDF, findDFhour, extractMonth, extractYear, formatDateString
+from helper_functions import setHistLayout, setScatLayout, updateHour, setRidesCount
 
 # April-September 2014
-df_april = pd.read_csv('df_april.csv', index_col=0)
-df_may = pd.read_csv('df_may.csv', index_col=0)
-df_june = pd.read_csv('df_june.csv', index_col=0)
-df_july = pd.read_csv('df_july.csv', index_col=0)
-df_august = pd.read_csv('df_august.csv', index_col=0)
-df_september = pd.read_csv('df_september.csv', index_col=0)
-
-frames = [df_april, df_may, df_june, df_july, df_august, df_september]
-
-# Filtering functions
-# Takes string date in form #/##/####
-def ridesOnDay(DATE, DF_MONTH):
-    return DF_MONTH[DF_MONTH['Date/Time'].str.match(DATE)]
-
-# Works for current state. Would be updated if the program receives more data
-def findDF(MONTH, YEAR):
-    return frames[int(MONTH)-4] if YEAR == "2014" else None
-
-def hour(DF, HOUR):
-    return DF[DF["Hour"] == int(HOUR)]
-
-def splitYearMonthDay(date):
-    date = date.replace('T', ' ')
-    date = date.split(' ')[0].split('-')
-    return date
-
-def extractMonth(date):
-    date = splitYearMonthDay(date)
-    return date[1]
-
-def extractYear(date):
-    date = splitYearMonthDay(date)
-    return date[0]
-
-def formatDateString(date):
-    date = splitYearMonthDay(date)
-    date_string = date[1].lstrip('0') + '/' + date[2].lstrip('0') + '/' + date[0]
-    return date_string
+months = ['april', 'may', 'june', 'july', 'august', 'september']
+frames = [pd.read_csv(f'df_{month}.csv', index_col=0) for month in months]
 
 # GUI
 
@@ -71,9 +36,9 @@ app.layout = html.Div(id='all', children=[
             html.Div(id='title', children=[
                 html.H1('NYC Uber Rides')],
                 style={
-                'textAlign': 'center',
-                'color': colors['text'],
-                'backgroundColor': colors['background1']
+                    'textAlign': 'center',
+                    'color': colors['text'],
+                    'backgroundColor': colors['background1']
                 }
             ),
             
@@ -87,7 +52,8 @@ app.layout = html.Div(id='all', children=[
                 ),
 
                 html.Label('Hour'),
-                dcc.Dropdown(id='hour_input',
+                dcc.Dropdown(
+                    id='hour_input',
                     options=hour_selection,
                     multi=True,
                 ),
@@ -106,7 +72,7 @@ app.layout = html.Div(id='all', children=[
                 id='scatter_div',
                 children=[
                     dcc.Graph(
-                    id='scatter',
+                        id='scatter',
                     )
                 ],
                 style={'height': '50vh'}
@@ -116,7 +82,7 @@ app.layout = html.Div(id='all', children=[
                 id='histogram_div',
                 children=[
                     dcc.Graph(
-                    id='histogram',
+                        id='histogram',
                     )
                 ],
                 style={'height': '50vh'}
@@ -151,7 +117,7 @@ app.layout = html.Div(id='all', children=[
 )
 def update_histogram(date):
     if date is not None:
-        df = findDF(extractMonth(date), extractYear(date))
+        df = findDF(frames, extractMonth(date), extractYear(date))
         date_string = formatDateString(date)
         result = ridesOnDay(date_string, df)
         
@@ -162,34 +128,13 @@ def update_histogram(date):
             x=bins,
             y=counts,
             color=bins,
-            text=counts,
-            color_discrete_sequence=colors,
+            text=counts
         )
-
         fig_hist.update_traces(
             textposition='outside',
             hovertemplate='Hour: %{x}<br>' + 'Rides: %{y}'
         )
-        fig_hist.layout.update(
-            showlegend=False,
-            dragmode='select',
-            plot_bgcolor='#696969',
-            paper_bgcolor='#696969',
-            margin={'l': 0, 'r': 0, 'b': 140, 't': 10},
-            xaxis=dict(
-                showgrid=False,
-                zeroline=False,
-                title=None,
-                fixedrange=True,
-                visible=True,
-                dtick=1
-            ),
-            yaxis=dict(
-                showgrid=False,
-                zeroline=False,
-                fixedrange=True,
-                visible=False
-            ))
+        setHistLayout(fig_hist)
         
         return fig_hist
 
@@ -204,19 +149,12 @@ def update_scatter(HOUR, DATE):
     mapbox_token="pk.eyJ1IjoiemFjaDE4MTgxOCIsImEiOiJjazhrZjBkZHQwMTdxM2Zwem5obHBneDdtIn0.gG_MrTFb9TiejDTHKAdL2A"
     px.set_mapbox_access_token(mapbox_token)
     
-    df = findDF(extractMonth(DATE), extractYear(DATE))
+    df = findDF(frames, extractMonth(DATE), extractYear(DATE))
     date_string = formatDateString(DATE)
     result = ridesOnDay(date_string, df)
     
-    if HOUR is not None:
-        if HOUR:
-            for selection in range(len(HOUR)):
-                if selection==0:
-                    temp_result = hour(result, HOUR[selection])
-                else:
-                    temp_result = temp_result.append(hour(result, HOUR[selection]))
-            
-            result = temp_result
+    if HOUR:
+        result = updateHour(result, HOUR)
 
     fig_scat = px.scatter_mapbox(
         result,
@@ -224,23 +162,9 @@ def update_scatter(HOUR, DATE):
         lon="Lon",
         color="Hour",
     )
+    setScatLayout(fig_scat)
     
-    fig_scat.layout.update(
-        autosize=True,
-        paper_bgcolor='#696969',
-        mapbox=dict(
-            accesstoken=mapbox_token,
-            center=dict(
-                lat=40.7189,
-                lon=-73.9506
-            ),
-        zoom=11
-        ),
-        margin={'l':0, 'r':0, 'b':0, 't':0}
-    )
-    
-    counts = len(result.index)
-    str_output = str(counts) + " rides"
+    str_output = setRidesCount(result)
     
     return fig_scat, str_output
 
