@@ -15,7 +15,7 @@ frames = [pd.read_csv(f'csv/df_{month}.csv', index_col=0) for month in months]
 
 # GUI
 
-external_stylesheets = ['https://codepen.io/zach181818/pen/LYVoJrG.css']
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 server = app.server
